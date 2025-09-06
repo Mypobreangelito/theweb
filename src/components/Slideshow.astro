@@ -1,6 +1,4 @@
 ---
-import { onMount } from "solid-js";
-
 const {
   images = [],
   interval = 4000,
@@ -9,66 +7,39 @@ const {
   showDots = true,
   showArrows = true,
 } = Astro.props;
-
-let current = 0;
-let timer;
-
-function next() {
-  current = (current + 1) % images.length;
-}
-
-function prev() {
-  current = (current - 1 + images.length) % images.length;
-}
-
-onMount(() => {
-  if (autoplay) {
-    timer = setInterval(next, interval);
-  }
-});
-
-function pause() {
-  if (pauseOnHover && timer) clearInterval(timer);
-}
-
-function resume() {
-  if (pauseOnHover && autoplay) {
-    timer = setInterval(next, interval);
-  }
-}
 ---
 
 <div
   class="relative w-full max-w-3xl mx-auto"
-  onmouseenter={pause}
-  onmouseleave={resume}
+  data-slideshow
+  data-images={JSON.stringify(images)}
+  data-interval={interval}
+  data-autoplay={autoplay ? "1" : "0"}
+  data-pause={pauseOnHover ? "1" : "0"}
 >
-  <!-- Imagen actual -->
-  <img
-    src={images[current].src}
-    alt={images[current].alt}
-    class="w-full h-auto rounded-lg object-cover"
-  />
-  {images[current].caption && (
-    <div class="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-sm">
-      {images[current].caption}
-    </div>
-  )}
+  <!-- Imagen -->
+  <img data-slide class="w-full h-auto rounded-lg object-cover" alt="" />
+
+  <!-- Caption -->
+  <div
+    data-caption
+    class="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-sm hidden"
+  ></div>
 
   <!-- Flechas -->
   {showArrows && (
     <>
       <button
+        data-prev
         class="absolute top-1/2 left-2 -translate-y-1/2 bg-black/40 text-white px-2 py-1 rounded"
         aria-label="Anterior"
-        onClick={prev}
       >
         ‹
       </button>
       <button
+        data-next
         class="absolute top-1/2 right-2 -translate-y-1/2 bg-black/40 text-white px-2 py-1 rounded"
         aria-label="Siguiente"
-        onClick={next}
       >
         ›
       </button>
@@ -77,15 +48,68 @@ function resume() {
 
   <!-- Dots -->
   {showDots && (
-    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2">
+    <div data-dots class="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2">
       {images.map((_, idx) => (
         <button
-          class={`w-2 h-2 rounded-full ${
-            idx === current ? "bg-white" : "bg-gray-400"
-          }`}
-          onClick={() => (current = idx)}
+          data-dot={idx}
+          class="w-2 h-2 rounded-full opacity-50 bg-white"
+          aria-label={`Ir a la imagen ${idx + 1}`}
         />
       ))}
     </div>
   )}
 </div>
+
+<script is:inline>
+  (() => {
+    document.querySelectorAll('[data-slideshow]').forEach((root) => {
+      const imgs = JSON.parse(root.dataset.images || '[]');
+      if (!imgs.length) return;
+
+      const imgEl = root.querySelector('[data-slide]');
+      const capEl = root.querySelector('[data-caption]');
+      const dots = Array.from(root.querySelectorAll('[data-dot]'));
+      const nextBtn = root.querySelector('[data-next]');
+      const prevBtn = root.querySelector('[data-prev]');
+
+      const interval = Number(root.dataset.interval || 4000);
+      const autoplay = root.dataset.autoplay === '1';
+      const pauseOnHover = root.dataset.pause === '1';
+
+      let i = 0, t = null;
+
+      function render() {
+        const it = imgs[i];
+        imgEl.src = it.src;
+        imgEl.alt = it.alt || '';
+        if (capEl) {
+          const has = !!it.caption;
+          capEl.textContent = it.caption || '';
+          capEl.classList.toggle('hidden', !has);
+        }
+        dots.forEach((d, k) => {
+          d.classList.toggle('opacity-100', k === i);
+          d.classList.toggle('opacity-50', k !== i);
+        });
+      }
+
+      function next() { i = (i + 1) % imgs.length; render(); }
+      function prev() { i = (i - 1 + imgs.length) % imgs.length; render(); }
+
+      nextBtn && nextBtn.addEventListener('click', next);
+      prevBtn && prevBtn.addEventListener('click', prev);
+      dots.forEach((d, k) => d.addEventListener('click', () => { i = k; render(); }));
+
+      function start() { if (!t && autoplay) t = setInterval(next, interval); }
+      function stop() { if (t) { clearInterval(t); t = null; } }
+
+      if (pauseOnHover) {
+        root.addEventListener('mouseenter', stop);
+        root.addEventListener('mouseleave', start);
+      }
+
+      render();
+      start();
+    });
+  })();
+</script>
