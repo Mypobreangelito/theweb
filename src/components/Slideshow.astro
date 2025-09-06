@@ -3,102 +3,80 @@
  *  images:   string[]   // ej. "Images/IMG_4870.jpg"
  *  captions?: string[]  // opcional
  *  interval?: number    // ms (default 15000)
- *  ratio?: string       // "16 / 9", "4 / 3", etc.
+ *  ratio?: string       // "16 / 9", "4 / 3", etc. (default "16 / 9")
  */
 const { images = [], captions = [], interval = 15000, ratio = "16 / 9" } = Astro.props;
 
-const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
-const srcs = images.map(p => p.startsWith('http') ? p : `${base}${p}`);
+// Prefijo ABSOLUTO: https://<usuario>.github.io/theweb/
+const prefix = new URL(import.meta.env.BASE_URL, Astro.site).toString();
+const srcs = images.map(p => p.startsWith("http") ? p : prefix + p);
 const caps = captions;
+
 const uid  = `ss-${Math.random().toString(36).slice(2)}`;
-
-// Fallback inicial renderizado en HTML
-const initialSrc = srcs[0] || "";
-const initialCap = caps[0] || "";
+const firstSrc = srcs[0] ?? "";
+const firstCap = caps[0] ?? "";
 ---
-<div id={uid} class="not-prose relative w-full max-w-4xl mx-auto">
+<div id={uid} class="not-prose w-full max-w-4xl mx-auto">
   <div class="relative overflow-hidden rounded-2xl shadow-soft bg-black" style={`aspect-ratio:${ratio};`}>
-    <!-- Doble capa para crossfade y cambio garantizado -->
-    <img data-role="a" src={initialSrc} alt={initialCap}
-         class="absolute inset-0 w-full h-full object-contain object-center opacity-100 transition-opacity duration-600" />
-    <img data-role="b" alt=""
-         class="absolute inset-0 w-full h-full object-contain object-center opacity-0 transition-opacity duration-600" />
-
+    <img
+      data-role="img"
+      src={firstSrc}
+      alt={firstCap}
+      class="absolute inset-0 w-full h-full object-contain object-center"
+      loading="eager"
+      decoding="async"
+    />
     <button data-role="prev"
-      class="absolute left-2 top-1/2 -translate-y-1/2 text-white/90 text-3xl px-2"
+      class="absolute z-10 left-2 top-1/2 -translate-y-1/2 text-white/90 text-3xl px-3 py-1 bg-black/30 rounded"
       aria-label="Anterior">‹</button>
     <button data-role="next"
-      class="absolute right-2 top-1/2 -translate-y-1/2 text-white/90 text-3xl px-2"
+      class="absolute z-10 right-2 top-1/2 -translate-y-1/2 text-white/90 text-3xl px-3 py-1 bg-black/30 rounded"
       aria-label="Siguiente">›</button>
   </div>
-  <p data-role="cap" class="text-center text-sm text-slate-600 mt-2 min-h-[1.25rem]">{initialCap}</p>
+  <p data-role="cap" class="text-center text-sm text-slate-600 mt-2 min-h-[1.25rem]">{firstCap}</p>
 
   <script is:inline>
     (function(){
       const root = document.getElementById({JSON.stringify(uid)});
       if (!root) return;
 
-      const imgA = root.querySelector('[data-role="a"]');
-      const imgB = root.querySelector('[data-role="b"]');
+      const img  = root.querySelector('[data-role="img"]');
       const cap  = root.querySelector('[data-role="cap"]');
       const prev = root.querySelector('[data-role="prev"]');
       const next = root.querySelector('[data-role="next"]');
 
+      // Datos embebidos desde el server
       const sources  = {JSON.stringify(srcs)};
       const captions = {JSON.stringify(caps)};
       if (!sources.length) return;
 
-      let i = 0;                 // índice actual
-      let showA = true;          // cuál capa está visible
-      let timerId = null;
+      let i = 0;
 
-      function setCaption(idx){ cap.textContent = captions[idx] || ''; }
-
-      function swapTo(nextIndex){
-        i = (nextIndex + sources.length) % sources.length;
-        const nextSrc = sources[i];
-        const nextCap = captions[i] || '';
-
-        if (showA) {
-          imgB.src = nextSrc;
-          imgB.alt = nextCap;
-          imgA.classList.add('opacity-0');
-          imgB.classList.remove('opacity-0');
-        } else {
-          imgA.src = nextSrc;
-          imgA.alt = nextCap;
-          imgB.classList.add('opacity-0');
-          imgA.classList.remove('opacity-0');
-        }
-        showA = !showA;
-        setCaption(i);
+      function render(index){
+        i = (index + sources.length) % sources.length;
+        img.src = sources[i];
+        img.alt = captions[i] || '';
+        if (cap) cap.textContent = captions[i] || '';
       }
 
-      function advance(delta){ swapTo(i + delta); restart(); }
-
-      function start(){
-        if (timerId || sources.length < 2) return;
-        timerId = setInterval(() => swapTo(i + 1), {JSON.stringify(interval)});
+      // Avance automático
+      if (sources.length > 1) {
+        setInterval(() => render(i + 1), {JSON.stringify(interval)});
       }
-      function stop(){ if (timerId){ clearInterval(timerId); timerId = null; } }
-      function restart(){ stop(); start(); }
 
-      // Botones y teclado
-      prev.addEventListener('click', () => advance(-1));
-      next.addEventListener('click', () => advance(1));
+      // Controles manuales
+      prev.addEventListener('click', () => render(i - 1));
+      next.addEventListener('click', () => render(i + 1));
+
+      // Teclado (si el slider tiene foco)
       root.tabIndex = 0;
       root.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowLeft')  advance(-1);
-        if (e.key === 'ArrowRight') advance(1);
+        if (e.key === 'ArrowLeft')  render(i - 1);
+        if (e.key === 'ArrowRight') render(i + 1);
       });
 
-      // Si alguna imagen falla, intenta la siguiente
-      imgA.addEventListener('error', () => advance(1));
-      imgB.addEventListener('error', () => advance(1));
-
-      // Inicia
-      start();
+      // Si alguna imagen falla, saltar a la siguiente
+      img.addEventListener('error', () => render(i + 1));
     })();
   </script>
 </div>
-
