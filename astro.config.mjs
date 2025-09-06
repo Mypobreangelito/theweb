@@ -6,7 +6,7 @@ import sitemap from "@astrojs/sitemap";
 // Config listo para GitHub Pages de mypobreangelito/theweb
 export default defineConfig({
   site: 'https://mypobreangelito.github.io/',
-  base: '/theweb',
+  base: '/theweb/',
   integrations: [tailwind(), mdx(), sitemap()],
   output: 'static'
 });
