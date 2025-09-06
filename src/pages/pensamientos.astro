@@ -6,32 +6,29 @@ const escritos = (await getCollection("escritos"))
   .filter((p) => !p.data.draft)
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
 const title = "Journal — Pensamientos";
 const description = "Un espacio donde comparto reflexiones, ciencia y poesía.";
 ---
 
 <Base {title} {description}>
   <main class="mx-auto max-w-5xl px-4 py-10">
-    <header class="mb-10 text-center">
+    <header class="mb-8 text-center">
       <h1 class="text-3xl font-bold">{title}</h1>
       <p class="text-slate-600 mt-2">{description}</p>
     </header>
 
-    <section class="grid gap-8">
-      {escritos.map(({ slug, data }) => (
+    <section class="grid gap-6 md:grid-cols-2">
+      {escritos.map((post) => (
         <a
-          href={`/pensamientos/${slug}/`}
+          href={`${base}pensamientos/${post.slug}/`}
           class="block rounded-xl border p-6 hover:shadow-lg transition"
         >
-          <h2 class="text-xl font-semibold">{data.title}</h2>
+          <h2 class="text-xl font-semibold">{post.data.title}</h2>
           <p class="text-sm text-slate-500 mt-1">
-            {data.date.toLocaleDateString("es-MX", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
+            {post.data.date.toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" })}
           </p>
-          {data.description && <p class="mt-3">{data.description}</p>}
+          {post.data.description && <p class="mt-3">{post.data.description}</p>}
         </a>
       ))}
     </section>
