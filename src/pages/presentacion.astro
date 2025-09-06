@@ -1,10 +1,10 @@
 ---
 import Base from "../layouts/Base.astro";
-import LightboxGallery from "../components/LightboxGallery.astro";
+import Slideshow from "../components/Slideshow.astro";
 const title = "Presentación — Sobre mí";
 const description = "Resumen profesional, intereses y trayectoria.";
 
-// Tus fotos EXACTAS (están en /public/Images/ con I mayúscula)
+// Tus imágenes EXACTAS
 const fotos = [
   "Images/1733276030784.jpg",
   "Images/I34A9340-Enhanced-NR.jpeg",
@@ -13,7 +13,6 @@ const fotos = [
   "Images/IMG_4870.jpg",
 ];
 
-// (Opcional) textos breves para cada foto
 const captions = [
   "Presentación 2025",
   "Ensayo en laboratorio",
@@ -26,10 +25,22 @@ const captions = [
   <article class="prose prose-slate max-w-none">
     <h1>Hola, soy Luis Ángel</h1>
     <p>Soy químico computacional (UC Berkeley) con enfoque en métodos locales, fragmentación y educación abierta.</p>
-    <!-- …resto de tu contenido… -->
 
-    <h2 class="mt-10">Galería</h2>
-    <LightboxGallery images={fotos} captions={captions} />
+    <!-- Slider de una sola imagen (auto cada 15 s) -->
+    <Slideshow images={fotos} captions={captions} interval={15000} />
+
+    <h2 class="mt-10">Intereses</h2>
+    <ul>
+      <li>Teoría electrónica y métodos de localización (PM, FB, ER, IBO)</li>
+      <li>PySCF, RDKit, visualización científica</li>
+      <li>Educación y STS</li>
+    </ul>
+
+    <h2>Logros selectos</h2>
+    <ul>
+      <li>Desarrollo de librería de fragmentos para conjeturas HF</li>
+      <li>Presentación SURD 2025 · UC Berkeley</li>
+    </ul>
   </article>
 </Base>
 
