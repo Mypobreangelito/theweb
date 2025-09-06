@@ -5,7 +5,7 @@
  * interval?: number    // ms (default 15000)
  * ratio?: string       // "16 / 9", "4 / 3", etc. (default "16 / 9")
  */
-const { images = [], captions = [], interval = 15000, ratio = "16 / 9" } = Astro.props;
+const { images = [], captions = [], interval = 15, ratio = "16 / 9" } = Astro.props;
 
 // Prefijo ABSOLUTO: garantiza / al final y usa 'site' de astro.config
 const absPrefix = new URL(
