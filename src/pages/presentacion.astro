@@ -2,21 +2,72 @@
 import Base from "../layouts/Base.astro";
 const title = "Presentación — Sobre mí";
 const description = "Resumen profesional, intereses y trayectoria.";
+
+// BASE_URL robusto (para Pages)
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL
+  : import.meta.env.BASE_URL + '/';
+
+// Lista de fotos (ajusta el path según dónde estén)
+const photos = [
+  "images/1733276030784.jpg",
+  "images/l34A9340-Enhanced-NR.jpeg", // ojo con mayúsculas/minúsculas
+  "images/IMG_0217_VSCO.jpg",
+  "images/IMG_4830.jpg",
+  "images/IMG_4870.jpg",
+];
 ---
 <Base {title} {description} pathname="/presentacion">
   <article class="prose prose-slate max-w-none">
     <h1>Hola, soy Luis Ángel</h1>
     <p>Soy químico computacional (UC Berkeley) con enfoque en métodos locales, fragmentación y educación abierta.</p>
+
     <h2>Intereses</h2>
     <ul>
       <li>Teoría electrónica y métodos de localización (PM, FB, ER, IBO)</li>
       <li>PySCF, RDKit, visualización científica</li>
       <li>Educación y STS</li>
     </ul>
+
     <h2>Logros selectos</h2>
     <ul>
       <li>Desarrollo de librería de fragmentos para conjeturas HF</li>
       <li>Presentación SURD 2025 · UC Berkeley</li>
     </ul>
+
+    <!-- Galería -->
+    <h2 class="mt-10">Galería</h2>
+    <div class="not-prose grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {photos.map((p) => (
+        <a href={`${base}${p}`} target="_blank" rel="noopener" class="block">
+          <img
+            src={`${base}${p}`}
+            alt="Foto de Luis Ángel"
+            class="rounded-2xl shadow-soft object-cover w-full h-64"
+            loading="lazy" decoding="async"
+            data-photo={`${base}${p}`}
+          />
+        </a>
+      ))}
+    </div>
   </article>
+
+  <!-- Lightbox opcional (click para ampliar en modal) -->
+  <dialog id="lightbox" class="p-0 bg-transparent backdrop:bg-black/60 rounded-2xl">
+    <img id="lightboxImg" class="max-w-[90vw] max-h-[85vh] rounded-2xl shadow-soft" />
+  </dialog>
+  <script is:inline>
+    const box = document.getElementById('lightbox');
+    const img = document.getElementById('lightboxImg');
+    document.querySelectorAll('[data-photo]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        img.src = el.getAttribute('data-photo');
+        box.showModal();
+      });
+    });
+    box.addEventListener('click', (e) => { if (e.target === box) box.close(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') box.close(); });
+  </script>
 </Base>
+
