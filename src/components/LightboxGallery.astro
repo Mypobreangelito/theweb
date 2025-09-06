@@ -1,0 +1,87 @@
+---
+/** Props:
+ *  - images: string[]  (rutas relativas dentro de /public, p.ej. "Images/IMG_4870.jpg")
+ *  - captions?: string[] (opcional, mismo orden que images)
+ */
+const { images = [], captions = [] } = Astro.props;
+
+// BASE_URL robusto (para GitHub Pages)
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL
+  : import.meta.env.BASE_URL + '/';
+---
+<div class="not-prose">
+  <!-- Thumbnails -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    {images.map((p, i) => (
+      <button
+        class="group relative block focus:outline-none focus:ring-2 focus:ring-slate-500 rounded-2xl"
+        data-index={i}
+        data-full={`${base}${p}`}
+        aria-label={`Abrir imagen ${i + 1}`}
+      >
+        <img
+          src={`${base}${p}`}
+          alt={captions[i] ?? `Imagen ${i + 1}`}
+          class="rounded-2xl shadow-soft object-cover w-full h-64"
+          loading="lazy"
+          decoding="async"
+        />
+        <span class="absolute inset-0 rounded-2xl ring-0 group-hover:ring-4 ring-white/60 transition"></span>
+      </button>
+    ))}
+  </div>
+
+  <!-- Lightbox -->
+  <dialog id="lb" class="p-0 bg-transparent backdrop:bg-black/70 rounded-2xl">
+    <div class="relative">
+      <img id="lbImg" class="max-w-[90vw] max-h-[85vh] rounded-2xl shadow-soft" alt="" />
+      <p id="lbCap" class="text-center mt-2 text-slate-200"></p>
+
+      <!-- Controles -->
+      <button id="lbClose" class="absolute top-2 right-2 text-white/90 text-3xl leading-none px-3" aria-label="Cerrar">×</button>
+      <button id="lbPrev" class="absolute left-2 top-1/2 -translate-y-1/2 text-white/90 text-4xl leading-none px-3" aria-label="Anterior">‹</button>
+      <button id="lbNext" class="absolute right-2 top-1/2 -translate-y-1/2 text-white/90 text-4xl leading-none px-3" aria-label="Siguiente">›</button>
+    </div>
+  </dialog>
+
+  <script is:inline>
+    const thumbs = Array.from(document.querySelectorAll('[data-index]'));
+    const lb = document.getElementById('lb');
+    const lbImg = document.getElementById('lbImg');
+    const lbCap = document.getElementById('lbCap');
+    const prev = document.getElementById('lbPrev');
+    const next = document.getElementById('lbNext');
+    const closeBtn = document.getElementById('lbClose');
+    const sources = thumbs.map(el => el.getAttribute('data-full'));
+    const caps = {JSON.stringify(captions)};
+    let idx = 0;
+
+    function show(i){
+      if (!sources.length) return;
+      if (i < 0) i = sources.length - 1;
+      if (i >= sources.length) i = 0;
+      idx = i;
+      lbImg.src = sources[idx];
+      lbCap.textContent = caps[idx] || '';
+      lb.showModal();
+      // Preload vecinos
+      new Image().src = sources[(idx + 1) % sources.length];
+      new Image().src = sources[(idx - 1 + sources.length) % sources.length];
+    }
+
+    thumbs.forEach((el, i) => el.addEventListener('click', (e) => { e.preventDefault(); show(i); }));
+    prev.addEventListener('click', () => show(idx - 1));
+    next.addEventListener('click', () => show(idx + 1));
+    closeBtn.addEventListener('click', () => lb.close());
+    lb.addEventListener('click', (e) => { if (e.target === lb) lb.close(); });
+
+    // Teclado: ← → y Esc
+    document.addEventListener('keydown', (e) => {
+      if (!lb.open) return;
+      if (e.key === 'ArrowLeft') show(idx - 1);
+      if (e.key === 'ArrowRight') show(idx + 1);
+      if (e.key === 'Escape') lb.close();
+    });
+  </script>
+</div>
