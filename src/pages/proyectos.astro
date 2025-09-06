@@ -1,0 +1,14 @@
+---
+import Base from "../layouts/Base.astro";
+import ProjectCard from "../components/ProjectCard.astro";
+import { getCollection } from "astro:content";
+const projects = await getCollection("projects");
+const title = "Proyectos — Portafolio";
+const description = "Listado de proyectos con resúmenes y enlaces.";
+---
+<Base {title} {description} pathname="/proyectos">
+  <h1 class="text-3xl font-bold mb-6">Proyectos</h1>
+  <div class="grid md:grid-cols-3 gap-6">
+    {projects.map(p => <ProjectCard data={p.data} />)}
+  </div>
+</Base>

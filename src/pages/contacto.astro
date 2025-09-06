@@ -1,0 +1,13 @@
+---
+import Base from "../layouts/Base.astro";
+const title = "Contacto";
+const description = "Enlaces para contacto profesional.";
+---
+<Base {title} {description} pathname="/contacto">
+  <section class="reveal space-y-4">
+    <h1 class="text-3xl font-bold">Contacto</h1>
+    <p>Puedes escribirme a <a class="underline" href="mailto:tuemail@ejemplo.com">tuemail@ejemplo.com</a>.</p>
+    <p>También en <a class="underline" href="https://www.linkedin.com/">LinkedIn</a> y <a class="underline" href="https://github.com/">GitHub</a>.</p>
+    <p>Si prefieres formulario, crea uno con <a class="underline" href="https://formspree.io/">Formspree</a> y pega la acción en un &lt;form&gt; aquí.</p>
+  </section>
+</Base>

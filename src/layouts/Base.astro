@@ -1,0 +1,49 @@
+---
+import "../styles/global.css";
+import { initReveal } from "../scripts/reveal.js";
+import { onMount } from 'astro/runtime/client';
+const { title = "Luis Ayala — Portfolio", description = "Científico computacional • Química teórica • Proyectos y contacto", pathname = "/" } = Astro.props;
+onMount(() => { initReveal(); });
+---
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content={description} />
+  <link rel="icon" href={`${import.meta.env.BASE_URL}favicon-32.png`} sizes="32x32">
+  <link rel="icon" href={`${import.meta.env.BASE_URL}favicon-512.png`} sizes="512x512">
+  <title>{title}</title>
+  <!-- Open Graph -->
+  <meta property="og:title" content={title}>
+  <meta property="og:description" content={description}>
+  <meta property="og:type" content="website">
+  <meta property="og:url" content={new URL(pathname, Astro.site).href}>
+</head>
+<body class="font-sans text-slate-800 bg-white">
+  <header class="sticky top-0 z-40 backdrop-blur bg-white/70 border-b border-slate-200">
+    <nav class="mx-auto max-w-6xl px-6 py-3 flex items-center justify-between">
+      <a href={import.meta.env.BASE_URL} class="font-semibold">LA · Portfolio</a>
+      <ul class="flex gap-6 text-sm">
+        <li><a class="hover:opacity-70" href={import.meta.env.BASE_URL}>Inicio</a></li>
+        <li><a class="hover:opacity-70" href={`${import.meta.env.BASE_URL}presentacion`}>Presentación</a></li>
+        <li><a class="hover:opacity-70" href={`${import.meta.env.BASE_URL}proyectos`}>Proyectos</a></li>
+        <li><a class="hover:opacity-70" href={`${import.meta.env.BASE_URL}contacto`}>Contacto</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main class="mx-auto max-w-6xl px-6 py-10">
+    <slot />
+  </main>
+  <footer class="mt-20 bg-slate-50 border-t border-slate-200">
+    <div class="mx-auto max-w-6xl px-6 py-6 text-sm flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="text-slate-600">© {new Date().getFullYear()} Luis Ayala</div>
+      <div class="flex gap-4">
+        <a href="https://www.linkedin.com/" class="hover:opacity-70">LinkedIn</a>
+        <a href="https://github.com/mypobreangelito" class="hover:opacity-70">GitHub</a>
+        <a href={`${import.meta.env.BASE_URL}Luis_Ayala_CV.pdf`} class="hover:opacity-70">CV</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

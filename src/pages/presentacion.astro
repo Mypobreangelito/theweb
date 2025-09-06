@@ -1,0 +1,22 @@
+---
+import Base from "../layouts/Base.astro";
+const title = "Presentación — Sobre mí";
+const description = "Resumen profesional, intereses y trayectoria.";
+---
+<Base {title} {description} pathname="/presentacion">
+  <article class="prose prose-slate max-w-none">
+    <h1>Hola, soy Luis Ángel</h1>
+    <p>Soy químico computacional (UC Berkeley) con enfoque en métodos locales, fragmentación y educación abierta.</p>
+    <h2>Intereses</h2>
+    <ul>
+      <li>Teoría electrónica y métodos de localización (PM, FB, ER, IBO)</li>
+      <li>PySCF, RDKit, visualización científica</li>
+      <li>Educación y STS</li>
+    </ul>
+    <h2>Logros selectos</h2>
+    <ul>
+      <li>Desarrollo de librería de fragmentos para conjeturas HF</li>
+      <li>Presentación SURD 2025 · UC Berkeley</li>
+    </ul>
+  </article>
+</Base>

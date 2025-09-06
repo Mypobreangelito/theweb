@@ -1,0 +1,33 @@
+---
+import Base from "../layouts/Base.astro";
+const title = "Luis Ayala — Química Computacional";
+const description = "Portafolio profesional: proyectos, investigación, CV y contacto.";
+---
+<Base {title} {description} pathname="/">
+  <section class="reveal text-center space-y-6 py-12">
+    <h1 class="text-4xl md:text-5xl font-bold leading-tight">Construyo ciencia con código.</h1>
+    <p class="text-lg text-slate-600 max-w-3xl mx-auto">
+      Química computacional · Teoría · Visualización · Educación abierta.
+    </p>
+    <div class="flex gap-4 justify-center">
+      <a href={`${import.meta.env.BASE_URL}proyectos`} class="px-5 py-3 rounded-2xl bg-slate-900 text-white shadow-soft hover:opacity-90">Ver proyectos</a>
+      <a href={`${import.meta.env.BASE_URL}contacto`} class="px-5 py-3 rounded-2xl border border-slate-900 hover:bg-slate-900 hover:text-white">Contactar</a>
+      <a href={`${import.meta.env.BASE_URL}Luis_Ayala_CV.pdf`} class="px-5 py-3 rounded-2xl border border-slate-300 hover:bg-slate-100">CV</a>
+    </div>
+  </section>
+
+  <section class="reveal grid md:grid-cols-3 gap-6 mt-16">
+    <div class="p-6 rounded-2xl border border-slate-200 bg-white shadow-soft">
+      <h3 class="font-semibold mb-2">Investigación</h3>
+      <p class="text-sm text-slate-600">Fragmentos locales, Hartree–Fock, PySCF, librerías de MOs.</p>
+    </div>
+    <div class="p-6 rounded-2xl border border-slate-200 bg-white shadow-soft">
+      <h3 class="font-semibold mb-2">Docencia & Divulgación</h3>
+      <p class="text-sm text-slate-600">Material abierto, guías ACS, notas y presentaciones.</p>
+    </div>
+    <div class="p-6 rounded-2xl border border-slate-200 bg-white shadow-soft">
+      <h3 class="font-semibold mb-2">Proyectos</h3>
+      <p class="text-sm text-slate-600">Ciencia reproducible, aplicaciones y visualizaciones.</p>
+    </div>
+  </section>
+</Base>
