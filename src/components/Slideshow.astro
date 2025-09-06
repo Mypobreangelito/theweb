@@ -3,7 +3,7 @@
  *  images:   string[]   // ej. "Images/IMG_4870.jpg"
  *  captions?: string[]  // opcional
  *  interval?: number    // ms (default 15000)
- *  ratio?: string       // "16 / 9", "4 / 3", etc. (default "16 / 9")
+ *  ratio?: string       // "16 / 9", "4 / 3", etc.
  */
 const { images = [], captions = [], interval = 15000, ratio = "16 / 9" } = Astro.props;
 
@@ -12,7 +12,10 @@ const prefix = new URL(import.meta.env.BASE_URL, Astro.site).toString();
 const srcs = images.map(p => p.startsWith("http") ? p : prefix + p);
 const caps = captions;
 
-const uid  = `ss-${Math.random().toString(36).slice(2)}`;
+// ID y clave únicos (para registrar funciones globales seguras)
+const uid  = `ss_${Math.random().toString(36).slice(2)}`;
+const key  = `${uid}_ctl`;
+
 const firstSrc = srcs[0] ?? "";
 const firstCap = caps[0] ?? "";
 ---
@@ -26,12 +29,21 @@ const firstCap = caps[0] ?? "";
       loading="eager"
       decoding="async"
     />
-    <button data-role="prev"
+    <!-- Botones con z-index alto + onClick directo (fallback) -->
+    <button
+      data-role="prev"
+      type="button"
       class="absolute z-10 left-2 top-1/2 -translate-y-1/2 text-white/90 text-3xl px-3 py-1 bg-black/30 rounded"
-      aria-label="Anterior">‹</button>
-    <button data-role="next"
+      aria-label="Anterior"
+      onclick={`window['${key}'] && window['${key}'].prev && window['${key}'].prev()`}
+    >‹</button>
+    <button
+      data-role="next"
+      type="button"
       class="absolute z-10 right-2 top-1/2 -translate-y-1/2 text-white/90 text-3xl px-3 py-1 bg-black/30 rounded"
-      aria-label="Siguiente">›</button>
+      aria-label="Siguiente"
+      onclick={`window['${key}'] && window['${key}'].next && window['${key}'].next()`}
+    >›</button>
   </div>
   <p data-role="cap" class="text-center text-sm text-slate-600 mt-2 min-h-[1.25rem]">{firstCap}</p>
 
@@ -45,9 +57,9 @@ const firstCap = caps[0] ?? "";
       const prev = root.querySelector('[data-role="prev"]');
       const next = root.querySelector('[data-role="next"]');
 
-      // Datos embebidos desde el server
       const sources  = {JSON.stringify(srcs)};
       const captions = {JSON.stringify(caps)};
+      const intervalMs = {JSON.stringify(interval)};
       if (!sources.length) return;
 
       let i = 0;
@@ -59,14 +71,20 @@ const firstCap = caps[0] ?? "";
         if (cap) cap.textContent = captions[i] || '';
       }
 
-      // Avance automático
-      if (sources.length > 1) {
-        setInterval(() => render(i + 1), {JSON.stringify(interval)});
-      }
+      // Registrar controladores globales (para los onclick)
+      window[{JSON.stringify(key)}] = {
+        prev: () => render(i - 1),
+        next: () => render(i + 1),
+      };
 
-      // Controles manuales
+      // Listeners (si fallaran, los onclick ya cubren)
       prev.addEventListener('click', () => render(i - 1));
       next.addEventListener('click', () => render(i + 1));
+
+      // Auto-avance simple
+      if (sources.length > 1) {
+        setInterval(() => render(i + 1), intervalMs);
+      }
 
       // Teclado (si el slider tiene foco)
       root.tabIndex = 0;
@@ -75,7 +93,7 @@ const firstCap = caps[0] ?? "";
         if (e.key === 'ArrowRight') render(i + 1);
       });
 
-      // Si alguna imagen falla, saltar a la siguiente
+      // Si una imagen falla, saltar a la siguiente
       img.addEventListener('error', () => render(i + 1));
     })();
   </script>
