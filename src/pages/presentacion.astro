@@ -25,9 +25,9 @@ const captions = [
     <h1>Hola, soy Luis Ángel</h1>
     <p>Soy químico computacional (UC Berkeley) con enfoque en métodos locales, fragmentación y educación abierta.</p>
 
-    <Slideshow images={fotos} captions={captions} interval={15000} />
-
-    <!-- resto de la página -->
+    <!-- Foto completa (sin recorte), con barras si la proporción no coincide -->
+    <Slideshow images={fotos} captions={captions} interval={15000} ratio="16 / 9" />
   </article>
 </Base>
+
 
