@@ -20,14 +20,32 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # Configura Node y activa cache de npm
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
+
+      # Configura GitHub Pages (recomendado por GitHub)
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      # Instala dependencias (usa ci si existe lockfile; si no, install)
       - name: Install deps
-        run: npm install     # usa npm install (no npm ci)
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
+
+      # Build del sitio (genera ./dist)
       - name: Build
-        run: npm run build   # genera ./dist con Astro
+        run: npx astro build
+
+      # Sube el artefacto para Pages
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
