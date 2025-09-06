@@ -2,31 +2,34 @@
 import Base from "../../layouts/Base.astro";
 import { getCollection, getEntryBySlug } from "astro:content";
 
-// 1) Genera todas las rutas estáticas /escritos/<slug>/
 export async function getStaticPaths() {
   const posts = await getCollection("escritos", (p) => !p.data.draft);
-  return posts.map((p) => ({
-    params: { slug: p.slug },
-  }));
+  return posts.map((p) => ({ params: { slug: p.slug } }));
 }
 
-// 2) Renderiza el post solicitado
 const { slug } = Astro.params;
-const entry = await getEntryBySlug("escritos", slug!);
-if (!entry) throw new Error("Post no encontrado");
-const { Content, data } = await entry.render();
+const entry = slug ? await getEntryBySlug("escritos", slug) : null;
+if (!entry) {
+  throw new Error("Post no encontrado");
+}
+
+// 👇 OJO: data viene de entry.data (NO de render())
+const data = entry.data;
+const { Content } = await entry.render();
+
+// Utilidad para fecha robusta
+function fmtDate(d) {
+  const dt = d instanceof Date ? d : new Date(d);
+  return isNaN(dt) ? "" : dt.toLocaleDateString();
+}
 ---
 
-<Base title={data.title} description={data.description}>
+<Base title={data?.title ?? slug} description={data?.description}>
   <main class="mx-auto max-w-3xl px-4 py-8">
     <header class="mb-6">
       <h1 class="text-3xl font-bold tracking-tight">{data?.title ?? slug}</h1>
-      {data.description && <p class="text-gray-600 mt-1">{data.description}</p>}
-      {data.date && (
-        <p class="text-sm text-gray-500 mt-1">
-          {new Date(data.date as any).toLocaleDateString()}
-        </p>
-      )}
+      {data?.description && <p class="text-gray-600 mt-1">{data.description}</p>}
+      {data?.date && <p class="text-sm text-gray-500 mt-1">{fmtDate(data.date)}</p>}
     </header>
 
     <article class="prose prose-neutral dark:prose-invert max-w-none">
