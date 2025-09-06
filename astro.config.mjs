@@ -7,6 +7,7 @@ import sitemap from "@astrojs/sitemap";
 export default defineConfig({
   site: 'https://mypobreangelito.github.io/',
   base: '/theweb/',
+  trailingSlash: 'always',
   integrations: [tailwind(), mdx(), sitemap()],
   output: 'static'
 });
