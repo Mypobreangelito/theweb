@@ -1,0 +1,36 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getCollection, getEntryBySlug } from "astro:content";
+
+// Genera rutas /pensamientos/<slug>/ a partir de la colección 'escritos'
+export async function getStaticPaths() {
+  const posts = await getCollection("escritos", (p) => !p.data.draft);
+  return posts.map((p) => ({ params: { slug: p.slug } }));
+}
+
+const { slug } = Astro.params;
+const entry = slug ? await getEntryBySlug("escritos", slug) : null;
+if (!entry) throw new Error("Post no encontrado");
+
+const data = entry.data;          // frontmatter
+const { Content } = await entry.render();
+
+function fmtDate(d) {
+  const dt = d instanceof Date ? d : new Date(d);
+  return isNaN(dt) ? "" : dt.toLocaleDateString();
+}
+---
+
+<Base title={data?.title ?? slug} description={data?.description}>
+  <main class="mx-auto max-w-3xl px-4 py-8">
+    <header class="mb-6">
+      <h1 class="text-3xl font-bold tracking-tight">{data?.title ?? slug}</h1>
+      {data?.description && <p class="text-gray-600 mt-1">{data.description}</p>}
+      {data?.date && <p class="text-sm text-gray-500 mt-1">{fmtDate(data.date)}</p>}
+    </header>
+
+    <article class="prose prose-neutral dark:prose-invert max-w-none">
+      <Content />
+    </article>
+  </main>
+</Base>
