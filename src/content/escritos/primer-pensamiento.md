@@ -1,6 +1,6 @@
 ---
 title: "Primer pensamiento"
-date: "2025-09-06"          # YYYY-MM-DD
+date: "2025-09-06"
 description: "Un inicio para mi diario científico y poético."
 tags: ["reflexión", "inicio"]
 draft: false
