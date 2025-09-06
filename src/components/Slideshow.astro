@@ -1,100 +1,95 @@
 ---
 /** Props
- *  images:   string[]   // ej. "Images/IMG_4870.jpg"
- *  captions?: string[]  // opcional
- *  interval?: number    // ms (default 15000)
- *  ratio?: string       // "16 / 9", "4 / 3", etc.
+ * images:   string[]   // p.ej. "Images/IMG_4870.jpg"
+ * captions?: string[]  // opcional, mismo orden
+ * interval?: number    // ms (default 15000)
+ * ratio?: string       // "16 / 9", "4 / 3", etc. (default "16 / 9")
  */
 const { images = [], captions = [], interval = 15000, ratio = "16 / 9" } = Astro.props;
 
-// Prefijo ABSOLUTO: https://<usuario>.github.io/theweb/
-const prefix = new URL(import.meta.env.BASE_URL, Astro.site).toString();
-const srcs = images.map(p => p.startsWith("http") ? p : prefix + p);
-const caps = captions;
+// Prefijo ABSOLUTO: garantiza / al final y usa 'site' de astro.config
+const absPrefix = new URL(
+  import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/',
+  Astro.site
+).toString();
 
-// ID y clave únicos (para registrar funciones globales seguras)
-const uid  = `ss_${Math.random().toString(36).slice(2)}`;
-const key  = `${uid}_ctl`;
+// URLs ABSOLUTAS ya resueltas en el servidor (sin lógica en el cliente)
+const slides = images.map((p, i) => ({
+  src: p.startsWith('http') ? p : absPrefix + p.replace(/^\/+/, ''),
+  cap: captions[i] ?? ''
+}));
 
-const firstSrc = srcs[0] ?? "";
-const firstCap = caps[0] ?? "";
+const uid = `ss-${Math.random().toString(36).slice(2)}`;
 ---
 <div id={uid} class="not-prose w-full max-w-4xl mx-auto">
+  <!-- Marco con proporción fija; barras para que la foto quepa completa -->
   <div class="relative overflow-hidden rounded-2xl shadow-soft bg-black" style={`aspect-ratio:${ratio};`}>
-    <img
-      data-role="img"
-      src={firstSrc}
-      alt={firstCap}
-      class="absolute inset-0 w-full h-full object-contain object-center"
-      loading="eager"
-      decoding="async"
-    />
-    <!-- Botones con z-index alto + onClick directo (fallback) -->
+    {slides.map((s, i) => (
+      <img
+        src={s.src}
+        alt={s.cap}
+        data-idx={i}
+        class={`absolute inset-0 w-full h-full object-contain object-center ${i === 0 ? '' : 'hidden'}`}
+        loading={i === 0 ? 'eager' : 'lazy'}
+        decoding="async"
+      />
+    ))}
+
+    <!-- Controles SIEMPRE clicables -->
     <button
       data-role="prev"
       type="button"
       class="absolute z-10 left-2 top-1/2 -translate-y-1/2 text-white/90 text-3xl px-3 py-1 bg-black/30 rounded"
-      aria-label="Anterior"
-      onclick={`window['${key}'] && window['${key}'].prev && window['${key}'].prev()`}
-    >‹</button>
+      aria-label="Anterior">‹</button>
     <button
       data-role="next"
       type="button"
       class="absolute z-10 right-2 top-1/2 -translate-y-1/2 text-white/90 text-3xl px-3 py-1 bg-black/30 rounded"
-      aria-label="Siguiente"
-      onclick={`window['${key}'] && window['${key}'].next && window['${key}'].next()`}
-    >›</button>
+      aria-label="Siguiente">›</button>
   </div>
-  <p data-role="cap" class="text-center text-sm text-slate-600 mt-2 min-h-[1.25rem]">{firstCap}</p>
+
+  <!-- Caption -->
+  <p data-role="cap" class="text-center text-sm text-slate-600 mt-2 min-h-[1.25rem]">{slides[0]?.cap || ''}</p>
 
   <script is:inline>
     (function(){
       const root = document.getElementById({JSON.stringify(uid)});
       if (!root) return;
 
-      const img  = root.querySelector('[data-role="img"]');
+      const imgs = Array.from(root.querySelectorAll('img[data-idx]'));
       const cap  = root.querySelector('[data-role="cap"]');
       const prev = root.querySelector('[data-role="prev"]');
       const next = root.querySelector('[data-role="next"]');
 
-      const sources  = {JSON.stringify(srcs)};
-      const captions = {JSON.stringify(caps)};
-      const intervalMs = {JSON.stringify(interval)};
-      if (!sources.length) return;
+      if (!imgs.length) return;
 
       let i = 0;
-
-      function render(index){
-        i = (index + sources.length) % sources.length;
-        img.src = sources[i];
-        img.alt = captions[i] || '';
-        if (cap) cap.textContent = captions[i] || '';
+      function show(n){
+        const j = (n + imgs.length) % imgs.length;
+        imgs[i].classList.add('hidden');
+        imgs[j].classList.remove('hidden');
+        i = j;
+        if (cap) cap.textContent = imgs[i].alt || '';
       }
 
-      // Registrar controladores globales (para los onclick)
-      window[{JSON.stringify(key)}] = {
-        prev: () => render(i - 1),
-        next: () => render(i + 1),
-      };
-
-      // Listeners (si fallaran, los onclick ya cubren)
-      prev.addEventListener('click', () => render(i - 1));
-      next.addEventListener('click', () => render(i + 1));
-
-      // Auto-avance simple
-      if (sources.length > 1) {
-        setInterval(() => render(i + 1), intervalMs);
+      // Auto-avance simple y fiable
+      if (imgs.length > 1) {
+        setInterval(() => show(i + 1), {JSON.stringify(interval)});
       }
 
-      // Teclado (si el slider tiene foco)
+      // Controles
+      prev.addEventListener('click', () => show(i - 1));
+      next.addEventListener('click', () => show(i + 1));
+
+      // Teclado (con foco en el slider)
       root.tabIndex = 0;
       root.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowLeft')  render(i - 1);
-        if (e.key === 'ArrowRight') render(i + 1);
+        if (e.key === 'ArrowLeft')  show(i - 1);
+        if (e.key === 'ArrowRight') show(i + 1);
       });
 
       // Si una imagen falla, saltar a la siguiente
-      img.addEventListener('error', () => render(i + 1));
+      imgs.forEach(img => img.addEventListener('error', () => show(i + 1)));
     })();
   </script>
 </div>
