@@ -1,36 +1,35 @@
 ---
 import Base from "../layouts/Base.astro";
+import LightboxGallery from "../components/LightboxGallery.astro";
 const title = "Presentación — Sobre mí";
 const description = "Resumen profesional, intereses y trayectoria.";
-const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
 
-const photos = [
+// Tus fotos EXACTAS (están en /public/Images/ con I mayúscula)
+const fotos = [
   "Images/1733276030784.jpg",
-  "Images/I34A9340-Enhanced-NR.jpeg",  // ojo: .jpeg y I mayúscula
+  "Images/I34A9340-Enhanced-NR.jpeg",
   "Images/IMG_0217_VSCO.jpg",
   "Images/IMG_4830.jpg",
   "Images/IMG_4870.jpg",
+];
+
+// (Opcional) textos breves para cada foto
+const captions = [
+  "Presentación 2025",
+  "Ensayo en laboratorio",
+  "Campus",
+  "Experimento A",
+  "Equipo de trabajo",
 ];
 ---
 <Base {title} {description} pathname="/presentacion">
   <article class="prose prose-slate max-w-none">
     <h1>Hola, soy Luis Ángel</h1>
     <p>Soy químico computacional (UC Berkeley) con enfoque en métodos locales, fragmentación y educación abierta.</p>
+    <!-- …resto de tu contenido… -->
 
     <h2 class="mt-10">Galería</h2>
-    <div class="not-prose grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-      {photos.map((p) => (
-        <a href={`${base}${p}`} target="_blank" rel="noopener" class="block">
-          <img
-            src={`${base}${p}`}
-            alt={p}
-            class="rounded-2xl shadow-soft object-cover w-full h-64"
-            loading="lazy" decoding="async"
-          />
-        </a>
-      ))}
-    </div>
+    <LightboxGallery images={fotos} captions={captions} />
   </article>
 </Base>
-
 
