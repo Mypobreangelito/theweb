@@ -1,8 +1,8 @@
 ---
 /** Props
- *  images:   string[]           // rutas bajo /public (p.ej. "Images/IMG_4870.jpg")
- *  captions?: string[]          // opcional, mismo orden que images
- *  interval?: number            // ms, por defecto 15000 (15 s)
+ *  images:   string[]   // rutas bajo /public (p.ej. "Images/IMG_4870.jpg")
+ *  captions?: string[]  // opcional, mismo orden que images
+ *  interval?: number    // ms, por defecto 15000 (15 s)
  */
 const { images = [], captions = [], interval = 15000 } = Astro.props;
 
@@ -11,109 +11,72 @@ const base = import.meta.env.BASE_URL.endsWith('/')
   ? import.meta.env.BASE_URL
   : import.meta.env.BASE_URL + '/';
 
-// URLs completas (respeta http/https si ya viene absoluto)
+// Rutas absolutas
 const srcs = images.map(p => p.startsWith('http') ? p : `${base}${p}`);
+const caps = captions;
+const uid  = `ss-${Math.random().toString(36).slice(2)}`;
 
-// ID único para aislar comportamientos si hay varios sliders
-const uid = `ss-${Math.random().toString(36).slice(2)}`;
+// Fallback inicial renderizado en el HTML (¡¡clave!!)
+const initialSrc = srcs[0] || "";
+const initialCap = caps[0] || "";
 ---
 <div id={uid} class="not-prose relative w-full max-w-3xl mx-auto">
-  <div class="relative overflow-hidden rounded-2xl shadow-soft h-80">
-    <!-- Dos imágenes para hacer crossfade -->
-    <img data-role="a" alt="" class="w-full h-80 object-cover transition-opacity duration-700 opacity-100" />
-    <img data-role="b" alt="" class="w-full h-80 object-cover transition-opacity duration-700 opacity-0 absolute inset-0" />
-
-    <!-- Controles -->
-    <button data-role="prev" class="absolute left-2 top-1/2 -translate-y-1/2 text-white/90 text-3xl px-2"
-      aria-label="Anterior">‹</button>
-    <button data-role="next" class="absolute right-2 top-1/2 -translate-y-1/2 text-white/90 text-3xl px-2"
-      aria-label="Siguiente">›</button>
+  <div class="relative overflow-hidden rounded-2xl shadow-soft h-80 bg-slate-200">
+    <img
+      data-role="img"
+      src={initialSrc}
+      alt={initialCap}
+      class="w-full h-80 object-cover"
+      loading="eager"
+      decoding="async"
+    />
+    <button data-role="prev" class="absolute left-2 top-1/2 -translate-y-1/2 text-white/90 text-3xl px-2" aria-label="Anterior">‹</button>
+    <button data-role="next" class="absolute right-2 top-1/2 -translate-y-1/2 text-white/90 text-3xl px-2" aria-label="Siguiente">›</button>
   </div>
-  <p data-role="cap" class="text-center text-sm text-slate-600 mt-2 min-h-[1.25rem]"></p>
+  <p data-role="cap" class="text-center text-sm text-slate-600 mt-2 min-h-[1.25rem]">{initialCap}</p>
 
   <script is:inline>
     (function(){
       const root = document.getElementById({JSON.stringify(uid)});
       if (!root) return;
 
-      const imgA = root.querySelector('[data-role="a"]');
-      const imgB = root.querySelector('[data-role="b"]');
+      const img  = root.querySelector('[data-role="img"]');
       const cap  = root.querySelector('[data-role="cap"]');
       const prev = root.querySelector('[data-role="prev"]');
       const next = root.querySelector('[data-role="next"]');
 
-      const sources = {JSON.stringify(srcs)};
-      const caps    = {JSON.stringify(captions)};
-      if (!sources.length) return;
+      const sources  = {JSON.stringify(srcs)};
+      const captions = {JSON.stringify(caps)};
+      if (!sources.length) return; // si no hay imágenes, deja el fallback
 
-      let idx = 0;      // índice actual
-      let showA = true; // cuál img está visible
-      let timer = null;
+      let i = 0, timer = null;
 
-      function setCaption(i){ cap.textContent = caps[i] || ''; }
-
-      // Preload helper
-      function preload(i){
-        const n1 = new Image(); n1.src = sources[(i+1)%sources.length];
+      function set(j){
+        i = (j + sources.length) % sources.length;
+        img.src = sources[i];
+        img.alt = captions[i] || '';
+        cap.textContent = captions[i] || '';
       }
+      function start(){ if (!timer) timer = setInterval(() => set(i+1), {JSON.stringify(interval)}); }
+      function stop(){ if (timer) { clearInterval(timer); timer = null; } }
 
-      function render(i){
-        if (showA) {
-          imgB.src = sources[i];
-          imgB.alt = caps[i] || '';
-          // fade: A -> B
-          imgA.classList.add('opacity-0');
-          imgB.classList.remove('opacity-0');
-        } else {
-          imgA.src = sources[i];
-          imgA.alt = caps[i] || '';
-          // fade: B -> A
-          imgB.classList.add('opacity-0');
-          imgA.classList.remove('opacity-0');
-        }
-        showA = !showA;
-        setCaption(i);
-        preload(i);
-      }
-
-      function go(delta){
-        idx = (idx + delta + sources.length) % sources.length;
-        render(idx);
-        restart();
-      }
-
-      function start(){
-        if (timer) return;
-        timer = setInterval(() => go(1), {JSON.stringify(interval)});
-      }
-      function stop(){
-        if (timer) { clearInterval(timer); timer = null; }
-      }
-      function restart(){ stop(); start(); }
-
-      // Inicializa
-      imgA.src = sources[0];
-      imgA.alt = caps[0] || '';
-      setCaption(0);
-      preload(0);
+      // iniciar ciclo
       start();
 
-      // Eventos
-      prev.addEventListener('click', () => go(-1));
-      next.addEventListener('click', () => go(1));
+      prev.addEventListener('click', () => { set(i-1); stop(); start(); });
+      next.addEventListener('click', () => { set(i+1); stop(); start(); });
 
-      // Pausar en hover/focus
       root.addEventListener('mouseenter', stop);
       root.addEventListener('mouseleave', start);
       root.addEventListener('focusin', stop);
       root.addEventListener('focusout', start);
 
-      // Teclado
-      document.addEventListener('keydown', (e) => {
-        if (!root.contains(document.activeElement)) return; // solo si el foco está aquí
-        if (e.key === 'ArrowLeft')  go(-1);
-        if (e.key === 'ArrowRight') go(1);
+      root.tabIndex = 0;
+      root.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft')  { set(i-1); stop(); start(); }
+        if (e.key === 'ArrowRight') { set(i+1); stop(); start(); }
       });
     })();
   </script>
 </div>
+
