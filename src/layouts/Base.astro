@@ -1,10 +1,8 @@
 ---
 import "../styles/global.css";
-import { initReveal } from "../scripts/reveal.js";
-import { onMount } from 'astro/runtime/client';
 const { title = "Luis Ayala — Portfolio", description = "Científico computacional • Química teórica • Proyectos y contacto", pathname = "/" } = Astro.props;
-onMount(() => { initReveal(); });
 ---
+
 <!doctype html>
 <html lang="es">
 <head>
@@ -32,9 +30,11 @@ onMount(() => { initReveal(); });
       </ul>
     </nav>
   </header>
+
   <main class="mx-auto max-w-6xl px-6 py-10">
     <slot />
   </main>
+
   <footer class="mt-20 bg-slate-50 border-t border-slate-200">
     <div class="mx-auto max-w-6xl px-6 py-6 text-sm flex flex-col md:flex-row items-center justify-between gap-4">
       <div class="text-slate-600">© {new Date().getFullYear()} Luis Ayala</div>
@@ -45,5 +45,16 @@ onMount(() => { initReveal(); });
       </div>
     </div>
   </footer>
+
+  <!-- Script ligero para las animaciones de entrada -->
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+      const els = document.querySelectorAll('.reveal');
+      const obs = new IntersectionObserver((entries) => {
+        for (const e of entries) if (e.isIntersecting) e.target.classList.add('visible');
+      }, { threshold: 0.1 });
+      els.forEach(el => obs.observe(el));
+    });
+  </script>
 </body>
 </html>
