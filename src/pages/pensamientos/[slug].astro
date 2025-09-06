@@ -1,0 +1,31 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("escritos", (p) => !p.data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content, data } = await post.render();
+const title = data.title;
+const description = data.description ?? "";
+---
+
+<Base {title} {description}>
+  <main class="mx-auto max-w-3xl px-4 py-10 prose dark:prose-invert">
+    <article>
+      <header class="mb-6 not-prose">
+        <h1 class="text-3xl font-bold">{data.title}</h1>
+        <p class="text-sm text-slate-500">
+          {data.date.toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" })}
+        </p>
+      </header>
+      <Content />
+    </article>
+  </main>
+</Base>
