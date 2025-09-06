@@ -3,12 +3,18 @@ import Base from "../layouts/Base.astro";
 import Slideshow from "../components/Slideshow.astro";
 
 // Usa rutas relativas a /public con BASE_URL: pasa "images/archivo.jpg" (sin slash inicial)
-const images = [
+const rawImages = [
   { src: "Images/1733276030784.jpg", alt: "Retrato", caption: "ME - HI!" },
   { src: "Images/IMG_0217_VSCO.jpg", alt: "Graduation + Anchor House", caption: "Graduation + Anchor House" },
   { src: "Images/IMG_4830.jpg", alt: "Metas", caption: "Mis metas" },
   { src: "Images/IMG_4870.jpg", alt: "Vida", caption: "Vida & Trayectoria" },
 ];
+
+// normaliza con BASE_URL
+const images = rawImages.map(i => ({
+  ...i,
+  src: `${import.meta.env.BASE_URL}${i.src}`,
+}));
 
 const title = "Presentación — Sobre mí";
 const description = "Resumen profesional, intereses y trayectoria.";
