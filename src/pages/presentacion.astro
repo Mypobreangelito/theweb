@@ -1,29 +1,42 @@
 ---
 import Base from "../layouts/Base.astro";
 import Slideshow from "../components/Slideshow.astro";
+
+// Usa rutas relativas a /public con BASE_URL: pasa "images/archivo.jpg" (sin slash inicial)
+const images = [
+  { src: "images/1733276030784.jpg", alt: "Retrato", caption: "ME - HI!" },
+  { src: "images/img_0217_vsco.jpg", alt: "Graduation + Anchor House", caption: "Graduation + Anchor House" },
+  { src: "images/img_4830.jpg", alt: "Metas", caption: "Mis metas" },
+  { src: "images/img_4870.jpg", alt: "Vida", caption: "Vida & Trayectoria" },
+];
+
 const title = "Presentación — Sobre mí";
 const description = "Resumen profesional, intereses y trayectoria.";
-
-const fotos = [
-  "Images/1733276030784.jpg",
-  "Images/IMG_0217_VSCO.jpg",
-  "Images/IMG_4830.jpg",
-  "Images/IMG_4870.jpg",
-];
-
-const captions = [
-  "ME - HI!",
-  "Graduation + Anchor House",
-  "Mis metas",
-  "SURD Poster - STITCHED TOGETHER",
-];
 ---
-<Base {title} {description} pathname="/presentacion">
-  <article class="prose prose-slate max-w-none">
-    <h1>Hola, soy Luis Ángel</h1>
-    <p>Soy químico computacional (UC Berkeley) con enfoque en métodos locales, fragmentación y educación abierta.</p>
 
-    <Slideshow images={fotos} captions={captions} interval={3000} ratio="16 / 9" />
-  </article>
+<Base title={title} description={description}>
+  <main class="mx-auto max-w-5xl px-4 py-8 space-y-8">
+    <header class="space-y-2">
+      <h1 class="text-3xl font-bold tracking-tight">Presentación</h1>
+      <p class="text-gray-600">Un vistazo rápido a quién soy y hacia dónde voy.</p>
+    </header>
+
+    <Slideshow
+      images={images}
+      interval={4500}
+      autoplay={true}
+      pauseOnHover={true}
+      showDots={true}
+      showArrows={true}
+    />
+
+    <section class="prose max-w-none">
+      <h2>Sobre mí</h2>
+      <p>
+        Soy químico computacional con foco en métodos de localización orbital y estrategias
+        de inicio para Hartree–Fock. Me apasiona convertir ideas en herramientas útiles.
+      </p>
+    </section>
+  </main>
 </Base>
 
