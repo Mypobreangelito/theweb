@@ -1,38 +1,45 @@
 ---
 /** Props
- *  images:   string[]   // rutas bajo /public (p.ej. "Images/IMG_4870.jpg")
+ *  images:   string[]   // rutas bajo /public, ej. "Images/IMG_4870.jpg"
  *  captions?: string[]  // opcional, mismo orden que images
- *  interval?: number    // ms, por defecto 15000 (15 s)
+ *  interval?: number    // ms (default 15000)
+ *  ratio?: string       // CSS aspect-ratio, ej. "16 / 9", "4 / 3", "3 / 2"
  */
-const { images = [], captions = [], interval = 15000 } = Astro.props;
+const { images = [], captions = [], interval = 15000, ratio = "16 / 9" } = Astro.props;
 
-// BASE_URL robusto (GitHub Pages)
-const base = import.meta.env.BASE_URL.endsWith('/')
-  ? import.meta.env.BASE_URL
-  : import.meta.env.BASE_URL + '/';
-
-// Rutas absolutas
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + '/';
 const srcs = images.map(p => p.startsWith('http') ? p : `${base}${p}`);
 const caps = captions;
 const uid  = `ss-${Math.random().toString(36).slice(2)}`;
 
-// Fallback inicial renderizado en el HTML (¡¡clave!!)
 const initialSrc = srcs[0] || "";
 const initialCap = caps[0] || "";
 ---
-<div id={uid} class="not-prose relative w-full max-w-3xl mx-auto">
-  <div class="relative overflow-hidden rounded-2xl shadow-soft h-80 bg-slate-200">
+<div id={uid} class="not-prose relative w-full max-w-4xl mx-auto">
+  <!-- Contenedor con proporción fija; las barras usan bg-black (cámbialo si quieres) -->
+  <div class="relative overflow-hidden rounded-2xl shadow-soft bg-black" style={`aspect-ratio:${ratio};`}>
+    <!-- Imagen centrada y SIN recorte -->
     <img
       data-role="img"
       src={initialSrc}
       alt={initialCap}
-      class="w-full h-80 object-cover"
+      class="absolute inset-0 w-full h-full object-contain object-center"
       loading="eager"
       decoding="async"
     />
-    <button data-role="prev" class="absolute left-2 top-1/2 -translate-y-1/2 text-white/90 text-3xl px-2" aria-label="Anterior">‹</button>
-    <button data-role="next" class="absolute right-2 top-1/2 -translate-y-1/2 text-white/90 text-3xl px-2" aria-label="Siguiente">›</button>
+
+    <!-- Controles -->
+    <button
+      data-role="prev"
+      class="absolute left-2 top-1/2 -translate-y-1/2 text-white/90 text-3xl px-2"
+      aria-label="Anterior">‹</button>
+    <button
+      data-role="next"
+      class="absolute right-2 top-1/2 -translate-y-1/2 text-white/90 text-3xl px-2"
+      aria-label="Siguiente">›</button>
   </div>
+
+  <!-- Caption -->
   <p data-role="cap" class="text-center text-sm text-slate-600 mt-2 min-h-[1.25rem]">{initialCap}</p>
 
   <script is:inline>
@@ -47,7 +54,7 @@ const initialCap = caps[0] || "";
 
       const sources  = {JSON.stringify(srcs)};
       const captions = {JSON.stringify(caps)};
-      if (!sources.length) return; // si no hay imágenes, deja el fallback
+      if (!sources.length) return;
 
       let i = 0, timer = null;
 
@@ -60,18 +67,17 @@ const initialCap = caps[0] || "";
       function start(){ if (!timer) timer = setInterval(() => set(i+1), {JSON.stringify(interval)}); }
       function stop(){ if (timer) { clearInterval(timer); timer = null; } }
 
-      // iniciar ciclo
+      // auto-avanza (no se pausa al pasar el mouse)
       start();
 
+      // botones
       prev.addEventListener('click', () => { set(i-1); stop(); start(); });
       next.addEventListener('click', () => { set(i+1); stop(); start(); });
 
-      root.addEventListener('mouseenter', stop);
-      root.addEventListener('mouseleave', start);
+      // pausa sólo si el slider tiene foco con teclado
+      root.tabIndex = 0;
       root.addEventListener('focusin', stop);
       root.addEventListener('focusout', start);
-
-      root.tabIndex = 0;
       root.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowLeft')  { set(i-1); stop(); start(); }
         if (e.key === 'ArrowRight') { set(i+1); stop(); start(); }
