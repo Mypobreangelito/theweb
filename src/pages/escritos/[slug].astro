@@ -3,8 +3,10 @@ import Base from "../../layouts/Base.astro";
 import { getEntryBySlug } from "astro:content";
 
 const { slug } = Astro.params;
-const entry = await getEntryBySlug("escritos", slug!);
-if (!entry) throw new Error("Post no encontrado");
+const entry = slug ? await getEntryBySlug("escritos", slug) : null;
+if (!entry) {
+  throw new Error("Post no encontrado");
+}
 const { Content, data } = await entry.render();
 ---
 
