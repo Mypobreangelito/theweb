@@ -1,6 +1,6 @@
 ---
 /** Props
- *  images:   string[]   // rutas bajo /public, ej. "Images/IMG_4870.jpg"
+ *  images:   string[]   // rutas bajo /public (ej. "Images/IMG_4870.jpg")
  *  captions?: string[]  // opcional, mismo orden que images
  *  interval?: number    // ms (default 15000)
  *  ratio?: string       // CSS aspect-ratio, ej. "16 / 9", "4 / 3", "3 / 2"
@@ -16,9 +16,9 @@ const initialSrc = srcs[0] || "";
 const initialCap = caps[0] || "";
 ---
 <div id={uid} class="not-prose relative w-full max-w-4xl mx-auto">
-  <!-- Contenedor con proporción fija; las barras usan bg-black (cámbialo si quieres) -->
+  <!-- Proporción fija; usa bg-black como “barras” para mantener la foto completa -->
   <div class="relative overflow-hidden rounded-2xl shadow-soft bg-black" style={`aspect-ratio:${ratio};`}>
-    <!-- Imagen centrada y SIN recorte -->
+    <!-- Foto CENTRADA y SIN recorte -->
     <img
       data-role="img"
       src={initialSrc}
@@ -29,12 +29,10 @@ const initialCap = caps[0] || "";
     />
 
     <!-- Controles -->
-    <button
-      data-role="prev"
+    <button data-role="prev"
       class="absolute left-2 top-1/2 -translate-y-1/2 text-white/90 text-3xl px-2"
       aria-label="Anterior">‹</button>
-    <button
-      data-role="next"
+    <button data-role="next"
       class="absolute right-2 top-1/2 -translate-y-1/2 text-white/90 text-3xl px-2"
       aria-label="Siguiente">›</button>
   </div>
@@ -56,32 +54,50 @@ const initialCap = caps[0] || "";
       const captions = {JSON.stringify(caps)};
       if (!sources.length) return;
 
-      let i = 0, timer = null;
+      let i = 0;           // índice actual
+      let timer = null;    // id del timeout
 
-      function set(j){
+      function show(j){
         i = (j + sources.length) % sources.length;
+        // Cambia imagen + caption
         img.src = sources[i];
         img.alt = captions[i] || '';
         cap.textContent = captions[i] || '';
       }
-      function start(){ if (!timer) timer = setInterval(() => set(i+1), {JSON.stringify(interval)}); }
-      function stop(){ if (timer) { clearInterval(timer); timer = null; } }
 
-      // auto-avanza (no se pausa al pasar el mouse)
-      start();
+      function schedule(ms){
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => advance(1), ms);
+      }
 
-      // botones
-      prev.addEventListener('click', () => { set(i-1); stop(); start(); });
-      next.addEventListener('click', () => { set(i+1); stop(); start(); });
+      function advance(delta){
+        show(i + delta);
+        schedule({JSON.stringify(interval)});
+      }
 
-      // pausa sólo si el slider tiene foco con teclado
-      root.tabIndex = 0;
-      root.addEventListener('focusin', stop);
-      root.addEventListener('focusout', start);
-      root.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowLeft')  { set(i-1); stop(); start(); }
-        if (e.key === 'ArrowRight') { set(i+1); stop(); start(); }
+      // Si la imagen falla, avanza pronto a la siguiente
+      img.addEventListener('error', () => {
+        schedule(800); // intenta siguiente en 0.8s
       });
+      // Cuando carga, asegura que el ciclo siga (útil la primera vez)
+      img.addEventListener('load', () => {
+        // no reprogramamos aquí para evitar doble temporizador:
+        // el ciclo lo gestiona schedule() tras cada advance()
+      });
+
+      // Controles
+      prev.addEventListener('click', () => advance(-1));
+      next.addEventListener('click', () => advance(1));
+
+      // Teclado (si el slider tiene foco)
+      root.tabIndex = 0;
+      root.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft')  advance(-1);
+        if (e.key === 'ArrowRight') advance(1);
+      });
+
+      // Inicia ciclo después de la primera pintura
+      schedule({JSON.stringify(interval)});
     })();
   </script>
 </div>
