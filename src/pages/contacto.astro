@@ -4,10 +4,34 @@ const title = "Contacto";
 const description = "Enlaces para contacto profesional.";
 ---
 <Base {title} {description} pathname="/contacto">
-  <section class="reveal space-y-4">
+  <section class="reveal space-y-6 max-w-2xl">
     <h1 class="text-3xl font-bold">Contacto</h1>
-    <p>Puedes escribirme a <a class="underline" href="mailto:tuemail@ejemplo.com">tuemail@ejemplo.com</a>.</p>
-    <p>También en <a class="underline" href="https://www.linkedin.com/">LinkedIn</a> y <a class="underline" href="https://github.com/">GitHub</a>.</p>
-    <p>Si prefieres formulario, crea uno con <a class="underline" href="https://formspree.io/">Formspree</a> y pega la acción en un &lt;form&gt; aquí.</p>
+
+    <div class="space-y-2 text-slate-700">
+      <p>Correo: <a class="underline" href="mailto:ayala.luis3138@gmail.com">ayala.luis3138@gmail.com</a></p>
+      <p>Teléfono: <a class="underline" href="tel:+15593965910">+1 (559) 396-5910</a></p>
+      <p>GitHub: <a class="underline" href="https://github.com/mypobreangelito">@mypobreangelito</a></p>
+      <p>LinkedIn: <a class="underline" href="https://www.linkedin.com/in/luisayalatdk/">/in/luisayalatdk/</a></p>
+      <p>CV (PDF): <a class="underline" href={`${import.meta.env.BASE_URL}Luis_Ayala_CV.pdf`}>Descargar</a></p>
+    </div>
+
+    <!-- Formulario opcional (Formspree): cambia el action a tu endpoint -->
+    <form action="https://formspree.io/f/TU_ENDPOINT" method="POST" class="grid gap-3 mt-6">
+      <label class="grid gap-1">
+        <span class="text-sm">Nombre</span>
+        <input name="name" required class="border rounded-2xl px-3 py-2" />
+      </label>
+      <label class="grid gap-1">
+        <span class="text-sm">Email</span>
+        <input type="email" name="email" required class="border rounded-2xl px-3 py-2" />
+      </label>
+      <label class="grid gap-1">
+        <span class="text-sm">Mensaje</span>
+        <textarea name="message" rows="5" required class="border rounded-2xl px-3 py-2"></textarea>
+      </label>
+      <button class="px-5 py-3 rounded-2xl bg-slate-900 text-white shadow-soft hover:opacity-90">
+        Enviar
+      </button>
+    </form>
   </section>
 </Base>
