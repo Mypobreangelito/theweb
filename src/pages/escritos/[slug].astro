@@ -1,12 +1,19 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { getEntryBySlug } from "astro:content";
+import { getCollection, getEntryBySlug } from "astro:content";
 
-const { slug } = Astro.params;
-const entry = slug ? await getEntryBySlug("escritos", slug) : null;
-if (!entry) {
-  throw new Error("Post no encontrado");
+// 1) Genera todas las rutas estáticas /escritos/<slug>/
+export async function getStaticPaths() {
+  const posts = await getCollection("escritos", (p) => !p.data.draft);
+  return posts.map((p) => ({
+    params: { slug: p.slug },
+  }));
 }
+
+// 2) Renderiza el post solicitado
+const { slug } = Astro.params;
+const entry = await getEntryBySlug("escritos", slug!);
+if (!entry) throw new Error("Post no encontrado");
 const { Content, data } = await entry.render();
 ---
 
@@ -15,9 +22,11 @@ const { Content, data } = await entry.render();
     <header class="mb-6">
       <h1 class="text-3xl font-bold tracking-tight">{data.title}</h1>
       {data.description && <p class="text-gray-600 mt-1">{data.description}</p>}
-      <p class="text-sm text-gray-500 mt-1">
-        {new Date(data.date).toLocaleDateString()}
-      </p>
+      {data.date && (
+        <p class="text-sm text-gray-500 mt-1">
+          {new Date(data.date as any).toLocaleDateString()}
+        </p>
+      )}
     </header>
 
     <article class="prose prose-neutral dark:prose-invert max-w-none">
